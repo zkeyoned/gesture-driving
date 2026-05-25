@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>Gesture Drive · 手势驾驶</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #87b9d8;
+    --panel: rgba(18, 18, 20, 0.68);
+    --panel-solid: rgba(18, 18, 20, 0.9);
+    --line: rgba(244, 234, 215, 0.12);
+    --text: #f4ead7;
+    --muted: rgba(244, 234, 215, 0.52);
+    --warm: #f5b65b;
+    --warm-soft: rgba(245, 182, 91, 0.18);
+    --cyan: #66e8ff;
+    --green: #73ff9b;
+    --red: #ff4e5f;
+    --throttle-level: 0%;
+    --brake-level: 0%;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', system-ui, sans-serif;
+    font-variant-numeric: tabular-nums;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+      radial-gradient(circle at 72% 18%, rgba(255, 235, 176, 0.42), transparent 18%),
+      linear-gradient(180deg, rgba(255, 248, 222, 0.16), rgba(53, 99, 126, 0.06) 48%, rgba(8, 9, 11, 0.04));
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 rgba(255, 78, 95, 0);
+    transition: box-shadow 180ms ease;
+  }
+
+  body.is-braking::after {
+    box-shadow: inset 0 0 96px rgba(255, 78, 95, 0.46), inset 0 0 18px rgba(255, 78, 95, 0.32);
+  }
+
+  #scene { position: fixed; inset: 0; z-index: 1; }
+
+  /* 摄像头预览（带手部骨架） */
+  .cam-wrap {
+    position: fixed; top: 18px; left: 18px; z-index: 10;
+    width: min(24vw, 260px); height: min(18vw, 195px);
+    min-width: 210px; min-height: 158px;
+    border: 1px solid rgba(245, 182, 91, 0.36);
+    border-radius: 18px; overflow: hidden;
+    background: #000;
+    box-shadow:
+      0 18px 48px rgba(0, 0, 0, 0.58),
+      0 0 28px rgba(245, 182, 91, 0.12),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+  }
+  .cam-wrap video, .cam-wrap canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    transform: scaleX(-1);  /* 镜像，更直观 */
+    object-fit: cover;
+  }
+  .cam-label {
+    position: absolute; top: 10px; left: 12px; z-index: 2;
+    padding: 4px 8px;
+    border: 1px solid rgba(102, 232, 255, 0.28);
+    border-radius: 999px;
+    background: rgba(8, 9, 11, 0.58);
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 9px; letter-spacing: 0.16em;
+    text-shadow: 0 0 10px rgba(102, 232, 255, 0.38);
+  }
+
+  /* 仪表盘 */
+  .hud {
+    position: fixed; right: 28px; bottom: 22px;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 54px minmax(144px, 168px) 54px;
+    grid-template-rows: auto auto;
+    gap: 6px 10px;
+    align-items: end;
+    justify-content: center;
+    width: min(330px, calc(100vw - 24px));
+    padding: 0;
+  }
+
+  .speed-cluster {
+    grid-column: 2;
+    position: relative;
+    width: 168px;
+    aspect-ratio: 1;
+    margin: 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background:
+      radial-gradient(circle at 50% 50%, rgba(245, 182, 91, 0.16), transparent 38%),
+      radial-gradient(circle at 50% 52%, rgba(16, 14, 12, 0.86) 0 51%, transparent 52%),
+      conic-gradient(from 220deg, rgba(245, 182, 91, 0) 0deg, rgba(245, 182, 91, 0.8) 74deg, rgba(244, 234, 215, 0.18) 145deg, rgba(245, 182, 91, 0) 278deg);
+    box-shadow:
+      0 0 34px rgba(245, 182, 91, 0.18),
+      inset 0 0 50px rgba(245, 182, 91, 0.08);
+    transform: translateY(18px);
+  }
+
+  .speed-cluster::before {
+    content: "";
+    position: absolute;
+    inset: 11px;
+    border-radius: 50%;
+    border: 1px solid rgba(245, 182, 91, 0.32);
+    background:
+      linear-gradient(transparent 49%, rgba(245, 182, 91, 0.08) 50%, transparent 51%),
+      linear-gradient(90deg, transparent 49%, rgba(245, 182, 91, 0.08) 50%, transparent 51%);
+  }
+
+  .speed-cluster::after {
+    content: "";
+    position: absolute;
+    inset: 27px;
+    border-radius: 50%;
+    border: 1px solid rgba(244, 234, 215, 0.08);
+    box-shadow: inset 0 0 32px rgba(0, 0, 0, 0.64);
+  }
+
+  body.is-throttling .speed-cluster {
+    box-shadow:
+      0 0 64px rgba(245, 182, 91, 0.36),
+      0 0 18px rgba(115, 255, 155, 0.12),
+      inset 0 0 52px rgba(245, 182, 91, 0.12);
+  }
+
+  .speed-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    transform: translateY(-2px);
+  }
+
+  .speed-label,
+  .pedal-label,
+  .steer-label,
+  .status h3 {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+
+  .speed-label {
+    color: var(--muted);
+    font-size: 11px;
+    margin-bottom: 4px;
+  }
+
+  .speed-value {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 46px;
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: 0;
+    color: var(--text);
+    text-shadow: 0 0 24px rgba(245, 182, 91, 0.26);
+  }
+
+  .speed-unit {
+    display: block;
+    margin-top: 4px;
+    color: var(--warm);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+
+  .gear-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 74px;
+    margin-top: 7px;
+    padding: 3px 10px;
+    border: 1px solid rgba(245, 182, 91, 0.28);
+    border-radius: 999px;
+    background: rgba(8, 9, 11, 0.56);
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+  }
+
+  #gear {
+    color: var(--text);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .pedal {
+    align-self: center;
+    display: grid;
+    grid-template-rows: 1fr auto auto;
+    justify-items: center;
+    gap: 8px;
+    min-height: 118px;
+    padding: 8px 6px 9px;
+    border: 1px solid rgba(244, 234, 215, 0.1);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(18, 18, 20, 0.56), rgba(18, 18, 20, 0.28));
+    backdrop-filter: blur(18px);
+    box-shadow: 0 16px 42px rgba(0, 0, 0, 0.32);
+  }
+
+  .pedal.throttle { grid-column: 1; }
+  .pedal.brake { grid-column: 3; }
+
+  .pedal-track {
+    position: relative;
+    width: 18px;
+    height: 66px;
+    align-self: end;
+    border-radius: 999px;
+    overflow: hidden;
+    background: rgba(244, 234, 215, 0.08);
+    border: 1px solid rgba(244, 234, 215, 0.1);
+  }
+
+  .pedal-fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 0%;
+    border-radius: 999px;
+    transition: height 80ms linear, box-shadow 120ms ease;
+  }
+
+  .throttle .pedal-fill {
+    height: var(--throttle-level);
+    background: linear-gradient(180deg, #caff93, var(--green));
+    box-shadow: 0 0 18px rgba(115, 255, 155, 0.18);
+  }
+
+  .brake .pedal-fill {
+    height: var(--brake-level);
+    background: linear-gradient(180deg, #ff9a76, var(--red));
+    box-shadow: 0 0 18px rgba(255, 78, 95, 0.18);
+  }
+
+  body.is-throttling .throttle {
+    border-color: rgba(115, 255, 155, 0.36);
+    box-shadow: 0 0 34px rgba(115, 255, 155, 0.16);
+  }
+
+  body.is-throttling .throttle .pedal-fill {
+    box-shadow: 0 0 24px rgba(115, 255, 155, 0.52);
+  }
+
+  .pedal-label {
+    color: var(--muted);
+    font-size: 8px;
+  }
+
+  .pedal-value {
+    color: var(--text);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  .pedal-value .unit {
+    margin-left: 2px;
+    color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 13px;
+  }
+
+  .steer-panel {
+    grid-column: 1 / 4;
+    width: min(330px, calc(100vw - 40px));
+    margin: -2px auto 0;
+    padding: 7px 12px 9px;
+    border: 1px solid rgba(102, 232, 255, 0.16);
+    border-radius: 14px;
+    background: rgba(8, 9, 11, 0.38);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  }
+
+  .steer-head {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 7px;
+  }
+
+  .steer-label {
+    color: var(--muted);
+    font-size: 10px;
+  }
+
+  .steer-deg {
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    text-shadow: 0 0 16px rgba(102, 232, 255, 0.26);
+  }
+
+  .steer-end {
+    color: rgba(102, 232, 255, 0.62);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+  }
+
+  .steer-end:last-child { text-align: right; }
+
+  /* 转向角条 */
+  .steer-bar {
+    position: relative;
+    height: 12px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(102, 232, 255, 0.16), rgba(244, 234, 215, 0.08), rgba(102, 232, 255, 0.16));
+    border: 1px solid rgba(102, 232, 255, 0.16);
+  }
+
+  .steer-bar::before {
+    content: "";
+    position: absolute;
+    top: -4px;
+    bottom: -4px;
+    left: 50%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: rgba(244, 234, 215, 0.72);
+    box-shadow: 0 0 10px rgba(245, 182, 91, 0.5);
+    z-index: 1;
+  }
+
+  .steer-bar::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: inset 0 0 12px rgba(102, 232, 255, 0.18);
+  }
+
+  .steer-bar .fill {
+    position: absolute; top: 0; bottom: 0; left: 50%;
+    width: 0;
+    background: linear-gradient(90deg, rgba(102, 232, 255, 0.72), var(--cyan));
+    border-radius: 999px;
+    box-shadow: 0 0 18px rgba(102, 232, 255, 0.42);
+    transition: all 0.05s linear;
+  }
+
+  body.is-hard-steer .steer-end {
+    animation: steerBlink 380ms ease-in-out infinite alternate;
+  }
+
+  body.is-hard-steer .steer-bar {
+    box-shadow: 0 0 22px rgba(102, 232, 255, 0.26);
+  }
+
+  @keyframes steerBlink {
+    from { color: rgba(102, 232, 255, 0.45); text-shadow: none; }
+    to { color: var(--cyan); text-shadow: 0 0 14px rgba(102, 232, 255, 0.78); }
+  }
+
+  /* 状态指示 */
+  .status {
+    position: fixed; top: 18px; right: 18px; z-index: 10;
+    background: var(--panel);
+    backdrop-filter: blur(22px);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 14px 16px;
+    min-width: 244px;
+    box-shadow: 0 18px 44px rgba(0,0,0,0.42);
+  }
+  .status h3 {
+    font-size: 10px;
+    color: rgba(245, 182, 91, 0.78);
+    margin-bottom: 10px; font-weight: 600;
+  }
+  .status .row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 12px;
+    padding: 7px 0;
+    color: var(--muted);
+    border-bottom: 1px solid rgba(244, 234, 215, 0.07);
+  }
+  .status .row:last-child { border-bottom: none; }
+  .status .icon {
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(102, 232, 255, 0.08);
+    border: 1px solid rgba(102, 232, 255, 0.13);
+    font-size: 15px;
+  }
+  .status .copy {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .status .copy span:first-child {
+    color: rgba(244, 234, 215, 0.64);
+    font-size: 13px;
+  }
+  .status .copy span:last-child {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .status .ok { color: var(--cyan) !important; text-shadow: 0 0 12px rgba(102, 232, 255, 0.26); }
+  .status .off { color: var(--muted); }
+
+  /* 开始遮罩 */
+  .overlay {
+    position: fixed; inset: 0; z-index: 100;
+    background:
+      radial-gradient(circle at 50% 62%, rgba(245, 182, 91, 0.16), transparent 34%),
+      linear-gradient(180deg, rgba(8, 9, 11, 0.94), rgba(8, 9, 11, 0.98));
+    display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 22px;
+    padding: 32px;
+  }
+  .overlay.hidden { display: none; }
+  .overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(90deg, transparent 0 7%, rgba(245, 182, 91, 0.08) 7.1%, transparent 7.4% 92.6%, rgba(245, 182, 91, 0.08) 92.9%, transparent 93.2%),
+      repeating-linear-gradient(0deg, transparent 0 22px, rgba(244, 234, 215, 0.025) 23px);
+  }
+  .overlay h1 {
+    position: relative;
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(44px, 7vw, 86px);
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    background: linear-gradient(135deg, var(--text), var(--warm) 58%, #fff4da);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: 0 0 42px rgba(245, 182, 91, 0.22);
+  }
+  .overlay p {
+    position: relative;
+    color: rgba(244, 234, 215, 0.72);
+    max-width: 690px;
+    text-align: center;
+    line-height: 1.65;
+    font-size: 18px;
+    font-weight: 500;
+  }
+  .overlay button {
+    position: relative;
+    padding: 15px 44px;
+    border: 1px solid rgba(245, 182, 91, 0.52);
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(245, 182, 91, 0.96), rgba(186, 113, 38, 0.96));
+    color: #170f07;
+    box-shadow: 0 12px 34px rgba(245, 182, 91, 0.22), inset 0 1px 0 rgba(255,255,255,0.42);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    cursor: pointer;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+  }
+  .overlay button:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+    box-shadow: 0 16px 42px rgba(245, 182, 91, 0.3), inset 0 1px 0 rgba(255,255,255,0.46);
+  }
+  .overlay button:active { transform: translateY(0) scale(0.98); }
+
+  .guide {
+    position: relative;
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    width: min(740px, 100%);
+    color: var(--text);
+  }
+  .guide div {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    align-items: center;
+    gap: 12px;
+    min-height: 70px;
+    padding: 13px 15px;
+    background: rgba(18, 18, 20, 0.58);
+    border: 1px solid rgba(244, 234, 215, 0.1);
+    border-radius: 12px;
+    backdrop-filter: blur(16px);
+  }
+  .guide .gesture-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(245, 182, 91, 0.1);
+    border: 1px solid rgba(245, 182, 91, 0.18);
+    font-size: 18px;
+  }
+  .guide b {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--warm);
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+  .guide span:last-child {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.35;
+  }
+
+  @media (max-width: 760px) {
+    .cam-wrap {
+      width: 178px;
+      height: 134px;
+      min-width: 0;
+      min-height: 0;
+    }
+    .status {
+      right: 12px;
+      min-width: 188px;
+      padding: 10px 12px;
+    }
+    .status .copy { gap: 8px; }
+    .status .copy span:first-child { display: none; }
+    .hud {
+      grid-template-columns: 56px minmax(170px, 1fr) 56px;
+      gap: 8px 10px;
+      bottom: 8px;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
+    .speed-cluster { width: 188px; transform: translateY(26px); }
+    .pedal {
+      min-height: 134px;
+      padding: 8px 6px 10px;
+      border-radius: 12px;
+    }
+    .pedal-track {
+      width: 18px;
+      height: 74px;
+    }
+    .pedal-label {
+      font-size: 8px;
+      letter-spacing: 0.08em;
+    }
+    .pedal-value { font-size: 15px; }
+    .steer-panel {
+      padding: 8px 12px 10px;
+    }
+    .overlay {
+      justify-content: flex-start;
+      padding-top: 54px;
+      overflow-y: auto;
+    }
+    .overlay p { font-size: 15px; }
+    .guide { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="overlay" id="overlay">
+  <h1>GESTURE DRIVE</h1>
+  <p>允许摄像头权限后，把双手放进左上角画面。双手像握住方向盘一样倾斜控制转向，右手拇指加速，左手拇指减速，双手合十急刹。</p>
+  <div class="guide">
+    <div><span class="gesture-icon">✋</span><span><b>双手保持距离</b>倾斜两手控制转向</span></div>
+    <div><span class="gesture-icon">👍</span><span><b>右手拇指朝上</b>触发油门加速</span></div>
+    <div><span class="gesture-icon">👍</span><span><b>左手拇指朝上</b>触发轻刹减速</span></div>
+    <div><span class="gesture-icon">🙏</span><span><b>双手合十</b>触发急刹反馈</span></div>
+  </div>
+  <button onclick="start()">开始驾驶</button>
+</div>
+
+<canvas id="scene"></canvas>
+
+<div class="cam-wrap">
+  <span class="cam-label">CAM · LIVE</span>
+  <video id="video" autoplay playsinline muted></video>
+  <canvas id="overlay-canvas"></canvas>
+</div>
+
+<div class="status">
+  <h3>HAND TRACKING</h3>
+  <div class="row"><span class="icon">🤚</span><span class="copy"><span>左手</span><span id="left-status" class="off">未检测</span></span></div>
+  <div class="row"><span class="icon">✋</span><span class="copy"><span>右手</span><span id="right-status" class="off">未检测</span></span></div>
+  <div class="row"><span class="icon">🙏</span><span class="copy"><span>合十</span><span id="together-status" class="off">—</span></span></div>
+  <div class="row"><span class="icon">⚡</span><span class="copy"><span>FPS</span><span id="fps">—</span></span></div>
+</div>
+
+<div class="hud">
+  <div class="pedal throttle">
+    <div class="pedal-track"><div class="pedal-fill"></div></div>
+    <div class="pedal-label">THROTTLE</div>
+    <div class="pedal-value"><span id="throttle">0</span><span class="unit">%</span></div>
+  </div>
+
+  <div class="speed-cluster">
+    <div class="speed-content">
+      <div class="speed-label">SPEED</div>
+      <div class="speed-value" id="speed">0</div>
+      <span class="speed-unit">km/h</span>
+      <div class="gear-pill">GEAR <span id="gear">N</span></div>
+    </div>
+  </div>
+
+  <div class="pedal brake">
+    <div class="pedal-track"><div class="pedal-fill"></div></div>
+    <div class="pedal-label">BRAKE</div>
+    <div class="pedal-value"><span id="brake">0</span><span class="unit">%</span></div>
+  </div>
+
+  <div class="steer-panel">
+    <div class="steer-head">
+      <span class="steer-end">L</span>
+      <div><span class="steer-label">STEER</span> <span class="steer-deg"><span id="steer-deg">0</span>°</span></div>
+      <span class="steer-end">R</span>
+    </div>
+    <div class="steer-bar"><div class="fill" id="steer-fill"></div></div>
+  </div>
+</div>
+
+<!-- MediaPipe Hands -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils@0.3.1640029074/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils@0.3.1620248257/drawing_utils.js" crossorigin="anonymous"></script>
+
+<!-- Three.js -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+
+// ============ 全局状态 ============
+const state = {
+  steer: 0,        // -1 ~ 1
+  throttle: 0,     // 0 ~ 1
+  brake: 0,        // 0 ~ 1
+  gear: 0,         // 0=N, 1/2/3
+  speed: 0,        // km/h
+  carX: 0,         // 车横向位置
+  leftHand: null,
+  rightHand: null,
+};
+
+const MAX_SPEED = 140;
+
+// ============ Three.js 场景 ============
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.16;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x8ec6e8);
+scene.fog = new THREE.Fog(0xc7d7d5, 46, 175);
+
+const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 500);
+camera.position.set(0, 3.5, 7);
+camera.lookAt(0, 1, 0);
+
+// 灯光
+scene.add(new THREE.AmbientLight(0xc5b796, 0.64));
+scene.add(new THREE.HemisphereLight(0xeaf7ff, 0xb2956b, 0.92));
+const dir = new THREE.DirectionalLight(0xfff4d2, 0.94);
+dir.position.set(5, 10, 5);
+scene.add(dir);
+
+// 道路
+const roadGeo = new THREE.PlaneGeometry(18, 1000);
+const roadMat = new THREE.MeshStandardMaterial({ color: 0x4c4a45, roughness: 0.84 });
+const road = new THREE.Mesh(roadGeo, roadMat);
+road.rotation.x = -Math.PI / 2;
+road.position.z = -400;
+scene.add(road);
+
+// 双向四车道：中间双黄线，两侧各两条车道
+const lineGroup = new THREE.Group();
+for (let i = 0; i < 90; i++) {
+  for (const x of [-4, 4]) {
+    const dash = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.14, 3.6),
+      new THREE.MeshBasicMaterial({ color: 0xf4ead7, transparent: true, opacity: 0.72 })
+    );
+    dash.rotation.x = -Math.PI / 2;
+    dash.position.set(x, 0.016, -i * 9);
+    lineGroup.add(dash);
+  }
+}
+scene.add(lineGroup);
+
+// 道路边线和侧向节奏线（视觉优化，不影响驾驶逻辑）
+const roadDetailGroup = new THREE.Group();
+for (const x of [-0.22, 0.22]) {
+  const centerLine = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.1, 1000),
+    new THREE.MeshBasicMaterial({ color: 0xf5b65b, transparent: true, opacity: 0.9 })
+  );
+  centerLine.rotation.x = -Math.PI / 2;
+  centerLine.position.set(x, 0.018, -400);
+  centerLine.userData.staticRoadDetail = true;
+  roadDetailGroup.add(centerLine);
+}
+for (const side of [-1, 1]) {
+  const edgeLine = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.1, 1000),
+    new THREE.MeshBasicMaterial({ color: 0xd4c3a1, transparent: true, opacity: 0.58 })
+  );
+  edgeLine.rotation.x = -Math.PI / 2;
+  edgeLine.position.set(side * 8.1, 0.014, -400);
+  edgeLine.userData.staticRoadDetail = true;
+  roadDetailGroup.add(edgeLine);
+
+  for (let i = 0; i < 90; i++) {
+    const marker = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.7, 0.18),
+      new THREE.MeshBasicMaterial({
+        color: side > 0 ? 0xf5b65b : 0x66e8ff,
+        transparent: true,
+        opacity: 0.56,
+      })
+    );
+    marker.rotation.x = -Math.PI / 2;
+    marker.position.set(side * 8.75, 0.02, -i * 7.2);
+    roadDetailGroup.add(marker);
+  }
+}
+scene.add(roadDetailGroup);
+
+// 路边护栏（克制发光灯柱）
+const poles = new THREE.Group();
+for (let i = 0; i < 60; i++) {
+  for (let side of [-1, 1]) {
+    const pole = new THREE.Mesh(
+      new THREE.BoxGeometry(0.15, 1.2, 0.15),
+      new THREE.MeshBasicMaterial({ color: side > 0 ? 0xf5b65b : 0x66e8ff })
+    );
+    pole.position.set(side * 9.2, 0.6, -i * 14);
+    poles.add(pole);
+  }
+}
+scene.add(poles);
+
+// 车（简化）
+const car = new THREE.Group();
+const body = new THREE.Mesh(
+  new THREE.BoxGeometry(1.85, 0.34, 3.25),
+  new THREE.MeshStandardMaterial({ color: 0xffc14f, metalness: 0.58, roughness: 0.28 })
+);
+body.position.y = 0.5;
+car.add(body);
+const hood = new THREE.Mesh(
+  new THREE.BoxGeometry(1.62, 0.22, 1.05),
+  new THREE.MeshStandardMaterial({ color: 0xffd56e, metalness: 0.5, roughness: 0.3 })
+);
+hood.position.set(0, 0.66, -0.92);
+car.add(hood);
+const cabin = new THREE.Mesh(
+  new THREE.BoxGeometry(1.18, 0.44, 1.08),
+  new THREE.MeshStandardMaterial({ color: 0xcdf6ff, metalness: 0.38, roughness: 0.12 })
+);
+cabin.position.set(0, 0.9, 0.18);
+car.add(cabin);
+const rearDeck = new THREE.Mesh(
+  new THREE.BoxGeometry(1.74, 0.18, 0.72),
+  new THREE.MeshStandardMaterial({ color: 0xffb038, metalness: 0.55, roughness: 0.3 })
+);
+rearDeck.position.set(0, 0.68, 1.18);
+car.add(rearDeck);
+const spoiler = new THREE.Mesh(
+  new THREE.BoxGeometry(2.1, 0.1, 0.2),
+  new THREE.MeshStandardMaterial({ color: 0xffe1a3, metalness: 0.45, roughness: 0.24 })
+);
+spoiler.position.set(0, 1.02, 1.55);
+car.add(spoiler);
+// 四个轮子
+for (let x of [-0.8, 0.8]) {
+  for (let z of [-1.2, 1.2]) {
+    const wheel = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.3, 0.2, 12),
+      new THREE.MeshStandardMaterial({ color: 0x2e3133, metalness: 0.28, roughness: 0.42 })
+    );
+    wheel.rotation.z = Math.PI / 2;
+    wheel.position.set(x, 0.3, z);
+    car.add(wheel);
+  }
+}
+scene.add(car);
+
+// 远处目标点（让人有方向感）
+for (let i = 0; i < 8; i++) {
+  const beacon = new THREE.Mesh(
+    new THREE.SphereGeometry(0.4, 8, 8),
+    new THREE.MeshBasicMaterial({ color: 0xffffff })
+  );
+  beacon.position.set((Math.random() - 0.5) * 4, 5 + Math.random() * 10, -50 - i * 30);
+  scene.add(beacon);
+}
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ============ MediaPipe ============
+const video = document.getElementById('video');
+const overlayCanvas = document.getElementById('overlay-canvas');
+const overlayCtx = overlayCanvas.getContext('2d');
+
+const hands = new Hands({
+  locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/${file}`,
+});
+hands.setOptions({
+  maxNumHands: 2,
+  modelComplexity: 1,
+  minDetectionConfidence: 0.6,
+  minTrackingConfidence: 0.5,
+});
+hands.onResults(onHandsResults);
+
+function onHandsResults(results) {
+  // 画手部骨架
+  overlayCanvas.width = video.videoWidth || 640;
+  overlayCanvas.height = video.videoHeight || 480;
+  overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+  state.leftHand = null;
+  state.rightHand = null;
+
+  if (results.multiHandLandmarks && results.multiHandedness) {
+    for (let i = 0; i < results.multiHandLandmarks.length; i++) {
+      const landmarks = results.multiHandLandmarks[i];
+      // 注意：因为视频做了镜像，MediaPipe标记的Left/Right要反过来
+      const label = results.multiHandedness[i].label === 'Left' ? 'Right' : 'Left';
+
+      drawConnectors(overlayCtx, landmarks, HAND_CONNECTIONS,
+        { color: label === 'Left' ? '#66e8ff' : '#f5b65b', lineWidth: 2 });
+      drawLandmarks(overlayCtx, landmarks,
+        { color: '#f4ead7', lineWidth: 1, radius: 2 });
+
+      if (label === 'Left') state.leftHand = landmarks;
+      else state.rightHand = landmarks;
+    }
+  }
+
+  updateGestureState();
+}
+
+// ============ 手势识别逻辑 ============
+function updateGestureState() {
+  // 0. 双手合十：用两手掌心距离 / 手大小判定，跨距离都适用
+  let handsTogether = false;
+  if (state.leftHand && state.rightHand) {
+    const lp = state.leftHand[9];   // 左手掌心
+    const rp = state.rightHand[9];  // 右手掌心
+    const lw = state.leftHand[0];
+    const handSize = Math.hypot(lp.x - lw.x, lp.y - lw.y);
+    const dist = Math.hypot(lp.x - rp.x, lp.y - rp.y);
+    handsTogether = handSize > 0.01 && dist < handSize * 1.5;
+  }
+
+  // 1. 方向盘：双手都存在且没有合十时
+  if (state.leftHand && state.rightHand && !handsTogether) {
+    const lw = state.leftHand[0];
+    const rw = state.rightHand[0];
+    const dy = lw.y - rw.y;
+    const dx = lw.x - rw.x;
+    const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    const maxAngle = 35;
+    state.steer = Math.max(-1, Math.min(1, -angle / maxAngle));
+  } else {
+    state.steer *= 0.85;
+  }
+
+  // 2. 油门：右手大拇指朝上（合十时不油门）
+  const rightThumb = !handsTogether && !!(state.rightHand && isThumbUp(state.rightHand));
+  state.throttle = rightThumb ? 1 : 0;
+
+  // 3. 减速 / 刹车：左手 👍 = 缓减速；双手合十 = 急刹（强度更大）
+  const leftThumb = !!(state.leftHand && isThumbUp(state.leftHand));
+  state.brake = handsTogether ? 1.0 : (leftThumb ? 0.25 : 0);
+
+  state.rightGesture  = rightThumb ? 'thumb' : (state.rightHand ? 'idle' : null);
+  state.leftGesture   = leftThumb  ? 'thumb' : (state.leftHand  ? 'idle' : null);
+  state.handsTogether = handsTogether;
+
+  updateStatusUI();
+}
+
+// 判定"竖大拇指"：用"指尖到手掌中心的距离"判断卷曲，旋转无关
+function isThumbUp(landmarks) {
+  const wrist = landmarks[0];
+  const palm = landmarks[9];   // 中指根，作为手掌中心
+  const handSize = Math.hypot(wrist.x - palm.x, wrist.y - palm.y);
+  if (handSize < 0.01) return false;
+
+  // 1) 拇指必须明显朝上且远离手掌
+  const thumbTip = landmarks[4];
+  if (thumbTip.y > palm.y - handSize * 0.4) return false;
+  const thumbDist = Math.hypot(thumbTip.x - palm.x, thumbTip.y - palm.y);
+  if (thumbDist < handSize * 0.9) return false;
+
+  // 2) 其余四指必须卷向手掌（指尖与手掌距离 < 手长）
+  const tips = [8, 12, 16, 20];
+  for (const t of tips) {
+    const tip = landmarks[t];
+    const d = Math.hypot(tip.x - palm.x, tip.y - palm.y);
+    if (d > handSize * 1.3) return false;
+  }
+  return true;
+}
+
+function updateStatusUI() {
+  const ls = document.getElementById('left-status');
+  const rs = document.getElementById('right-status');
+  const ts = document.getElementById('together-status');
+  ls.textContent = state.leftGesture === 'thumb' ? '👍 减速' : state.leftGesture ? '✋ 待命' : '未检测';
+  ls.className   = state.leftGesture === 'thumb' ? 'ok' : state.leftGesture ? '' : 'off';
+  rs.textContent = state.rightGesture === 'thumb' ? '👍 加速' : state.rightGesture ? '✋ 待命' : '未检测';
+  rs.className   = state.rightGesture === 'thumb' ? 'ok' : state.rightGesture ? '' : 'off';
+  ts.textContent = state.handsTogether ? '🙏 急刹' : '—';
+  ts.className   = state.handsTogether ? 'ok' : 'off';
+}
+
+// ============ 物理与渲染循环 ============
+let lastFrame = performance.now();
+let frameCount = 0, fpsTime = performance.now();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min((now - lastFrame) / 1000, 0.1);
+  lastFrame = now;
+
+  // 计算速度：无手势时保速滑行；刹车优先于油门
+  //   油门：~12 km/h·s  → 0→140 约 12 秒
+  //   缓减速(brake=0.25)：~14 km/h·s
+  //   急刹(brake=1)：~55 km/h·s → 140→0 约 2.5 秒
+  if (state.brake > 0.01) {
+    state.speed -= state.brake * 55 * dt;
+  } else if (state.throttle > 0.01 && state.speed < MAX_SPEED) {
+    state.speed += state.throttle * 12 * dt;
+  }
+  state.speed = Math.max(0, Math.min(state.speed, MAX_SPEED));
+
+  // 挡位随速度自动推导（仅用于显示）
+  if (state.speed < 1)        state.gear = 0;
+  else if (state.speed < 50)  state.gear = 1;
+  else if (state.speed < 100) state.gear = 2;
+  else                        state.gear = 3;
+
+  // 转向影响横向位置
+  const speedFactor = state.speed / 80;
+  state.carX += state.steer * speedFactor * 6 * dt;
+  state.carX = Math.max(-7.2, Math.min(7.2, state.carX));
+
+  // 车跟随
+  car.position.x = state.carX;
+  car.rotation.y = -state.steer * 0.15;
+
+  // 道路滚动（让世界向后移动制造速度感）
+  const moveZ = state.speed * 0.28 * dt;
+  lineGroup.children.forEach(d => {
+    d.position.z += moveZ;
+    if (d.position.z > 10) d.position.z -= 90 * 9;
+  });
+  roadDetailGroup.children.forEach(d => {
+    if (d.userData.staticRoadDetail) return;
+    d.position.z += moveZ;
+    if (d.position.z > 10) d.position.z -= 90 * 7.2;
+  });
+  poles.children.forEach(p => {
+    p.position.z += moveZ;
+    if (p.position.z > 10) p.position.z -= 60 * 14;
+  });
+
+  // 相机跟随
+  camera.position.x += (state.carX * 0.4 - camera.position.x) * 0.1;
+  camera.lookAt(state.carX * 0.3, 1, -10);
+
+  // 更新HUD
+  document.getElementById('speed').textContent = Math.round(state.speed);
+  document.getElementById('gear').textContent = state.gear === 0 ? 'N' : state.gear;
+  document.getElementById('steer-deg').textContent = Math.round(state.steer * 90);
+  document.getElementById('throttle').textContent = Math.round(state.throttle * 100);
+  document.getElementById('brake').textContent = Math.round(state.brake * 100);
+
+  // UI-only feedback: expose pedal levels and transient body states for CSS effects.
+  document.documentElement.style.setProperty("--throttle-level", Math.round(state.throttle * 100) + "%");
+  document.documentElement.style.setProperty("--brake-level", Math.round(state.brake * 100) + "%");
+  document.body.classList.toggle("is-throttling", state.throttle > 0.1);
+  document.body.classList.toggle("is-hard-steer", Math.abs(state.steer) > 0.82);
+  if (state.brake > 0.85) {
+    document.body.classList.add("is-braking");
+    clearTimeout(window.__brakePulseTimer);
+    window.__brakePulseTimer = setTimeout(() => {
+      document.body.classList.remove("is-braking");
+    }, 260);
+  }
+
+  // 转向条
+  const fill = document.getElementById('steer-fill');
+  const pct = state.steer * 50;
+  if (pct >= 0) {
+    fill.style.left = '50%';
+    fill.style.width = pct + '%';
+  } else {
+    fill.style.left = (50 + pct) + '%';
+    fill.style.width = (-pct) + '%';
+  }
+
+  renderer.render(scene, camera);
+
+  // FPS
+  frameCount++;
+  if (now - fpsTime > 1000) {
+    document.getElementById('fps').textContent = frameCount;
+    frameCount = 0; fpsTime = now;
+  }
+}
+
+// ============ 启动 ============
+window.start = async function() {
+  document.getElementById('overlay').classList.add('hidden');
+  try {
+    const cam = new Camera(video, {
+      onFrame: async () => { await hands.send({ image: video }); },
+      width: 640,
+      height: 480,
+    });
+    cam.start();
+  } catch (e) {
+    alert('摄像头启动失败：' + e.message);
+  }
+  animate();
+};
+</script>
+</body>
+</html>
