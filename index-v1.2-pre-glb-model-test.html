@@ -899,7 +899,6 @@
 
 <script type="module">
 import * as THREE from 'three';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
 
 // ============ 全局状态 ============
 const state = {
@@ -923,7 +922,6 @@ const STEER_MAX_ANGLE = 35;
 const GESTURE_HOLD_MS = 140;
 const THUMB_CONFIRM_FRAMES = 3;
 const TOGETHER_CONFIRM_FRAMES = 2;
-const SELECTED_CAR_MODEL = "car-01.glb";
 let hasStarted = false;
 let animationStarted = false;
 let activeCamera = null;
@@ -1345,70 +1343,6 @@ for (const x of [-1.02, 1.02]) {
     car.add(wheel);
   }
 }
-
-const fallbackCar = new THREE.Group();
-fallbackCar.name = "fallback-red-geometry-car";
-while (car.children.length > 0) {
-  fallbackCar.add(car.children[0]);
-}
-fallbackCar.visible = false;
-car.add(fallbackCar);
-
-const gltfLoader = new GLTFLoader();
-const carModelUrl = `assets/models/${SELECTED_CAR_MODEL}`;
-let loadedCarModel = null;
-
-function fitLoadedCarModel(model) {
-  model.updateMatrixWorld(true);
-  const box = new THREE.Box3().setFromObject(model);
-  const size = new THREE.Vector3();
-  const center = new THREE.Vector3();
-  box.getSize(size);
-  box.getCenter(center);
-
-  model.position.sub(center);
-  const longestSide = Math.max(size.x, size.z);
-  const scale = longestSide > 0 ? 3.45 / longestSide : 1;
-  model.scale.setScalar(scale);
-  model.rotation.y = Math.PI;
-  model.updateMatrixWorld(true);
-
-  const fittedBox = new THREE.Box3().setFromObject(model);
-  model.position.y += 0.04 - fittedBox.min.y;
-  model.position.z += 0.12;
-
-  model.traverse((child) => {
-    if (!child.isMesh) return;
-    child.castShadow = true;
-    child.receiveShadow = true;
-    if (child.material) {
-      child.material.envMapIntensity = 1.15;
-      child.material.needsUpdate = true;
-    }
-  });
-}
-
-gltfLoader.load(
-  carModelUrl,
-  (gltf) => {
-    const model = gltf.scene;
-    model.name = `loaded-${SELECTED_CAR_MODEL}`;
-    fitLoadedCarModel(model);
-    if (loadedCarModel) {
-      car.remove(loadedCarModel);
-    }
-    loadedCarModel = model;
-    car.add(model);
-    fallbackCar.visible = false;
-    car.remove(fallbackCar);
-    console.log(`GLB car loaded: ${SELECTED_CAR_MODEL}`);
-  },
-  undefined,
-  (error) => {
-    fallbackCar.visible = true;
-    console.error(`GLB car failed to load: ${SELECTED_CAR_MODEL}`, error);
-  }
-);
 
 car.position.y = 0.02;
 scene.add(car);
