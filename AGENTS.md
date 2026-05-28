@@ -4,8 +4,8 @@
 
 - This is a single-file HTML project.
 - The main application lives in `index.html`.
-- Gesture Drive v1.1 is the current stable version.
-- Gesture Drive v1.2 should focus only on UI and experience upgrades.
+- Gesture Drive v1.2 is the current stable version.
+- Gesture Drive v1.2 focuses on Gesture Garage, GLB vehicle loading, and UI / experience upgrades.
 
 ## Editing Rules
 
@@ -15,7 +15,7 @@
 - Do not casually change the core gesture recognition logic.
 - Do not touch the gesture core logic when doing UI-only iterations unless explicitly requested.
 - Do not change existing DOM `id` values unless explicitly requested.
-- Do not modify stable v1.1 behavior when preparing v1.2 UI or experience updates.
+- Do not modify stable v1.2 behavior when preparing future v1.3 UI or experience updates.
 - Store background assets under `assets/backgrounds/`.
 - Store future model assets under `assets/models/`.
 - Store future texture assets under `assets/textures/`.

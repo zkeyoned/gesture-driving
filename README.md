@@ -2,66 +2,106 @@
 
 ## 项目简介
 
-Gesture Drive 是一个基于摄像头手势识别的网页驾驶小游戏。用户可以通过手部动作控制汽车，在 Three.js 驾驶场景中完成油门、刹车、急刹和转向操作。
+Gesture Drive 是一个基于摄像头手势识别的网页驾驶小游戏。用户可以先在 Gesture Garage 车库里选择车辆，再通过手部动作控制汽车，在 Three.js 驾驶场景中完成油门、刹车、急刹和转向操作。
 
 ## 当前版本
 
-Gesture Drive v1.1 - Stability & Cockpit HUD Update
+Gesture Drive v1.2 - Gesture Garage & GLB Vehicle Selection
 
-当前版本已经移除了容易像雨线/裂纹的斜向速度线，画面更干净。
-当前项目已经开始使用外部背景资源，背景图路径为 `assets/backgrounds/cyber-highway-night.jpg`。
-当前车辆方向为红色未来跑车，后续计划继续优化车辆模型和近景道路融合。
+当前版本加入了轻量版手势车库：
+
+- 进入页面后先显示 Gesture Garage 车辆选择界面
+- 支持左右挥手切换车辆
+- 支持双手张开进入 READY TO DRIVE 确认状态
+- 保留鼠标 / 触控备用操作
+- 点击 START DRIVE / INITIATE DRIVE 后加载选中的 GLB 车辆
+- GLB 加载失败时不会进入驾驶，会在车库界面提示错误
+
+## 当前可选车辆
+
+当前车库选择列表只保留了测试中可见性较好的 4 个模型：
+
+| 名称 | 文件 | 标签 |
+| --- | --- | --- |
+| Crimson GT | `assets/models/car-01.glb` | Balanced |
+| Street Phantom | `assets/models/car-04.glb` | Agile |
+| Velocity RS | `assets/models/car-05.glb` | Speed |
+| Cyber Runner | `assets/models/car-06.glb` | Future |
+
+`car-02.glb` 和 `car-03.glb` 仍保留在 `assets/models/` 中，但因为驾驶视角下过暗 / 不明显，暂时不放入车库选择列表。
 
 ## 主要功能
 
+- Gesture Garage 手势选车
 - 右手拇指控制油门
 - 左手拇指控制轻刹
 - 双手合十触发急刹
 - 双手倾斜控制转向
 - Three.js 驾驶场景
+- Three.js GLTFLoader 车辆模型加载
 - MediaPipe Hands 手势识别
 - 摄像头辅助窗口
 - 驾驶舱 HUD
 
-## v1.1 更新内容
-
-- 修复 start() 重复启动问题
-- 缓存 HUD / status DOM 查询
-- 加入手势确认帧和短暂保持
-- 加入转向 dead zone 和平滑插值
-- 优化双手合十判断
-- 初步升级 HUD、摄像头窗口和状态提示 UI
-
-## v1.1.1 补充更新
-
-- 删除了斜向半透明虚线 / speed lines / motion streaks
-- 保留 HUD、摄像头窗口、右上状态面板
-- 保留刹车警示和基础 HUD 发光
-- 没有修改手势识别逻辑、车辆控制逻辑、MediaPipe 和 Three.js 主体
-
 ## 如何运行
 
-- 使用本地服务器运行项目，例如 `npm run dev`。
-- 也可以使用 VS Code Live Server 打开项目根目录中的 `index.html`。
-- 浏览器需要允许摄像头权限。
-- 推荐使用 Chrome 浏览器。
+必须通过本地服务器运行项目，不要直接双击 `index.html`。
+
+推荐命令：
+
+```bash
+python3 -m http.server 8000
+```
+
+然后打开：
+
+```text
+http://localhost:8000/index.html
+```
+
+浏览器需要允许摄像头权限。推荐使用 Chrome 浏览器。
 
 ## 操作方式
 
-| 手势 | 操作 |
-| --- | --- |
-| 右手拇指动作 | 油门 |
-| 左手拇指动作 | 轻刹 |
-| 双手合十 | 急刹 |
-| 双手向左倾斜 | 向左转向 |
-| 双手向右倾斜 | 向右转向 |
+| 场景 | 手势 / 操作 | 功能 |
+| --- | --- | --- |
+| 车库 | 左右挥手 | 切换车辆 |
+| 车库 | 双手张开 | 确认当前车辆 |
+| 车库 | 点击左右箭头 / 车辆卡片 | 备用切换 / 确认 |
+| 车库 | 点击 START DRIVE / INITIATE DRIVE | 进入驾驶 |
+| 驾驶 | 右手拇指动作 | 油门 |
+| 驾驶 | 左手拇指动作 | 轻刹 |
+| 驾驶 | 双手合十 | 急刹 |
+| 驾驶 | 双手向左 / 向右倾斜 | 转向 |
+
+## 文件结构
+
+```text
+assets/
+  backgrounds/
+    cyber-highway-night.jpg
+  models/
+    car-01.glb
+    car-02.glb
+    car-03.glb
+    car-04.glb
+    car-05.glb
+    car-06.glb
+```
+
+项目仍保持单文件应用结构，主程序在 `index.html`。
+
+## 版本备份文件
+
+- `index-v1.2-bg-redcar-wip.html`：v1.2 背景图和红色几何体车阶段备份
+- `index-v1.2-pre-glb-model-test.html`：接入 GLB 模型前备份
+- `index-v1.2-pre-gesture-garage.html`：Gesture Garage UI 前备份
 
 ## 后续优化方向
 
-- 优化红色未来跑车模型
+- 用真实 GLB 预览替换车库里的示意车图
+- 继续筛选更适合尾视角的车辆模型
+- 优化车库视觉表现
 - 优化近景道路与远景背景融合
-- 更酷的赛车 HUD
 - 更强的速度感
-- 更完整的开始界面
-- 更直观的新手引导
 - 手势校准页面
