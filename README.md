@@ -12,7 +12,7 @@ Gesture Drive v1.2 - Gesture Garage & GLB Vehicle Selection
 
 - 进入页面后先显示 Gesture Garage 车辆选择界面
 - 支持左右挥手切换车辆
-- 支持双手张开进入 READY TO DRIVE 确认状态
+- 支持握拳保持 2 秒进入 READY TO DRIVE 确认状态并自动启动驾驶
 - 保留鼠标 / 触控备用操作
 - 点击 START DRIVE / INITIATE DRIVE 后加载选中的 GLB 车辆
 - GLB 加载失败时不会进入驾驶，会在车库界面提示错误
@@ -66,7 +66,7 @@ http://localhost:8000/index.html
 | 场景 | 手势 / 操作 | 功能 |
 | --- | --- | --- |
 | 车库 | 左右挥手 | 切换车辆 |
-| 车库 | 双手张开 | 确认当前车辆 |
+| 车库 | 握拳保持 2 秒 | 确认当前车辆并自动启动驾驶 |
 | 车库 | 点击左右箭头 / 车辆卡片 | 备用切换 / 确认 |
 | 车库 | 点击 START DRIVE / INITIATE DRIVE | 进入驾驶 |
 | 驾驶 | 右手拇指动作 | 油门 |

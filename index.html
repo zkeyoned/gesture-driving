@@ -1113,15 +1113,347 @@
     .garage-ready { text-align: left; }
     .gesture-guide span { font-size: 11px; padding: 5px 8px; }
   }
+
+  /* ============ Arcade wrapper: scanlines + corners ============ */
+  .arcade-scanlines {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    background:
+      repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.045) 0 1px,
+        transparent 1px 3px
+      );
+    mix-blend-mode: overlay;
+    opacity: 0.32;
+  }
+  .arcade-frame {
+    position: fixed;
+    inset: 14px;
+    z-index: 9998;
+    pointer-events: none;
+    border: 1px solid transparent;
+    border-radius: 6px;
+  }
+  .arcade-frame span {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    border-color: rgba(102, 232, 255, 0.42);
+    filter: drop-shadow(0 0 8px rgba(102, 232, 255, 0.35));
+  }
+  .arcade-frame span:nth-child(1) { top: 0;    left: 0;    border-top: 2px solid; border-left: 2px solid;  }
+  .arcade-frame span:nth-child(2) { top: 0;    right: 0;   border-top: 2px solid; border-right: 2px solid; }
+  .arcade-frame span:nth-child(3) { bottom: 0; left: 0;    border-bottom: 2px solid; border-left: 2px solid;  }
+  .arcade-frame span:nth-child(4) { bottom: 0; right: 0;   border-bottom: 2px solid; border-right: 2px solid; }
+  body.is-phase-drive .arcade-frame,
+  body.is-phase-drive .arcade-scanlines { opacity: 0; }
+
+  /* ============ Landing screen ============ */
+  .landing {
+    position: fixed; inset: 0; z-index: 200;
+    display: grid;
+    place-items: center;
+    grid-template-rows: 1fr auto 1fr;
+    padding: 60px 40px;
+    background:
+      radial-gradient(ellipse at 50% 38%, rgba(102, 232, 255, 0.16), transparent 50%),
+      radial-gradient(ellipse at 50% 92%, rgba(245, 182, 91, 0.14), transparent 50%),
+      linear-gradient(180deg, rgba(2, 6, 12, 0.78), rgba(2, 4, 8, 0.92));
+    backdrop-filter: blur(4px);
+    transition: opacity 360ms ease, transform 360ms ease;
+  }
+  .landing.is-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.02);
+  }
+  .landing-spacer { grid-row: 1; }
+
+  .landing-body {
+    grid-row: 2;
+    display: grid;
+    justify-items: center;
+    gap: 28px;
+    text-align: center;
+  }
+  .landing-eyebrow {
+    color: rgba(102, 232, 255, 0.78);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.42em;
+    text-transform: uppercase;
+    text-shadow: 0 0 12px rgba(102, 232, 255, 0.42);
+  }
+  .landing-title {
+    position: relative;
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(56px, 8vw, 124px);
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    line-height: 0.92;
+    color: #f7fbff;
+    text-shadow:
+      0 0 14px rgba(102, 232, 255, 0.62),
+      0 0 38px rgba(245, 182, 91, 0.28),
+      0 0 78px rgba(102, 232, 255, 0.18);
+  }
+  .landing-title::before,
+  .landing-title::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .landing-title::before {
+    color: rgba(255, 78, 95, 0.6);
+    transform: translate(-2px, 0);
+    mix-blend-mode: screen;
+    animation: landingGlitchR 4.6s steps(1) infinite;
+    opacity: 0.45;
+  }
+  .landing-title::after {
+    color: rgba(102, 232, 255, 0.6);
+    transform: translate(2px, 0);
+    mix-blend-mode: screen;
+    animation: landingGlitchL 4.6s steps(1) infinite;
+    opacity: 0.45;
+  }
+  @keyframes landingGlitchR {
+    0%, 96%, 100% { transform: translate(0, 0); opacity: 0.15; }
+    96.5% { transform: translate(-4px, 1px); opacity: 0.62; }
+    97% { transform: translate(2px, -1px); opacity: 0.5; }
+    97.5% { transform: translate(0, 0); opacity: 0.18; }
+  }
+  @keyframes landingGlitchL {
+    0%, 96%, 100% { transform: translate(0, 0); opacity: 0.15; }
+    96.5% { transform: translate(4px, -1px); opacity: 0.62; }
+    97% { transform: translate(-2px, 1px); opacity: 0.5; }
+    97.5% { transform: translate(0, 0); opacity: 0.18; }
+  }
+  .landing-slogan {
+    color: rgba(244, 234, 215, 0.7);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: clamp(14px, 1.4vw, 18px);
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+  }
+  .landing-start {
+    margin-top: 16px;
+    display: grid;
+    justify-items: center;
+    gap: 8px;
+  }
+  .landing-press {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(16px, 1.8vw, 22px);
+    letter-spacing: 0.36em;
+    color: var(--warm);
+    text-shadow: 0 0 18px rgba(245, 182, 91, 0.62);
+    animation: landingBlink 1.2s ease-in-out infinite;
+  }
+  .landing-keys {
+    color: rgba(203, 228, 235, 0.5);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+  }
+  @keyframes landingBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.28; }
+  }
+  .landing-footer {
+    grid-row: 3;
+    align-self: end;
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    color: rgba(203, 228, 235, 0.42);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+  }
+  .landing-status {
+    color: rgba(102, 232, 255, 0.62);
+  }
+  .landing-status.is-loading { color: var(--warm); }
+  .landing-status.is-error { color: var(--red); }
+
+  /* ============ Garage 3D mode overrides ============ */
+  body.is-phase-garage .overlay {
+    background:
+      radial-gradient(ellipse at 50% 56%, rgba(102, 232, 255, 0.06), transparent 56%),
+      linear-gradient(180deg, rgba(3, 7, 12, 0.18), rgba(2, 4, 8, 0.36));
+  }
+  body.is-phase-garage .overlay::before {
+    background:
+      repeating-linear-gradient(0deg, transparent 0 24px, rgba(244, 234, 215, 0.018) 25px),
+      repeating-linear-gradient(90deg, transparent 0 48px, rgba(102, 232, 255, 0.02) 49px);
+  }
+  body.is-phase-garage .garage-shell {
+    background:
+      linear-gradient(90deg, rgba(102, 232, 255, 0.04), transparent 18% 82%, rgba(245, 182, 91, 0.05)),
+      linear-gradient(180deg, rgba(5, 11, 18, 0.18), rgba(5, 7, 12, 0.06)),
+      radial-gradient(ellipse at 50% 96%, rgba(245, 182, 91, 0.1), transparent 40%);
+    backdrop-filter: blur(2px);
+    border-color: rgba(102, 232, 255, 0.22);
+    min-height: 460px;
+    overflow: visible;
+  }
+  body.is-phase-garage .garage-shell::before {
+    /* hide CSS turntable — real Three.js turntable shows through */
+    display: none;
+  }
+  body.is-phase-garage .garage-stage {
+    height: 380px;
+    overflow: visible;
+  }
+  body.is-phase-garage .car-card {
+    /* old card visuals are replaced by real 3D — hide them */
+    display: none;
+  }
+  body.is-phase-garage .garage-shell::after {
+    border-color: rgba(102, 232, 255, 0.08);
+  }
+
+  /* Confirm progress ring around the INITIATE DRIVE button */
+  .confirm-ring-wrap {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+  }
+  .confirm-ring {
+    position: absolute;
+    inset: -10px;
+    pointer-events: none;
+    border-radius: 12px;
+    border: 2px solid rgba(115, 255, 155, 0.16);
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+  .confirm-ring::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background:
+      conic-gradient(from -90deg, rgba(115, 255, 155, 0.86) 0deg, rgba(115, 255, 155, 0.86) calc(var(--progress, 0) * 360deg), transparent calc(var(--progress, 0) * 360deg + 0.5deg) 360deg);
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 3px;
+    filter: drop-shadow(0 0 10px rgba(115, 255, 155, 0.5));
+  }
+  .confirm-ring.is-active { opacity: 1; }
+  body.is-phase-garage .gesture-guide span.is-hot {
+    color: var(--cyan);
+    border-color: rgba(102, 232, 255, 0.42);
+    background: rgba(102, 232, 255, 0.08);
+  }
+
+  /* Turntable indicator dots row */
+  .turntable-dots {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 6px;
+  }
+  .turntable-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(102, 232, 255, 0.22);
+    border: 1px solid rgba(102, 232, 255, 0.42);
+    transition: background 240ms ease, transform 240ms ease, box-shadow 240ms ease;
+  }
+  .turntable-dots span.is-active {
+    background: var(--warm);
+    border-color: rgba(245, 182, 91, 0.92);
+    transform: scale(1.4);
+    box-shadow: 0 0 12px rgba(245, 182, 91, 0.68);
+  }
+
+  /* Hide overlay entirely in drive phase (already used by JS but make explicit) */
+  body.is-phase-drive .overlay { display: none; }
+  body.is-phase-landing .overlay { display: none; }
+  body.is-phase-landing .cam-wrap,
+  body.is-phase-landing .status,
+  body.is-phase-landing .hud { opacity: 0; pointer-events: none; transition: opacity 240ms ease; }
+  body.is-phase-garage .hud { opacity: 0; pointer-events: none; transition: opacity 240ms ease; }
+
+  /* ============ Drive: exit / change car button ============ */
+  .drive-exit {
+    position: fixed;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 11;
+    display: none;
+    padding: 9px 20px 8px;
+    border: 1px solid rgba(102, 232, 255, 0.36);
+    border-radius: 999px;
+    background: rgba(8, 11, 16, 0.62);
+    backdrop-filter: blur(12px);
+    color: var(--cyan);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition: color 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+  }
+  body.is-phase-drive .drive-exit { display: inline-flex; align-items: center; gap: 10px; }
+  .drive-exit:hover {
+    border-color: rgba(245, 182, 91, 0.62);
+    color: var(--warm);
+    transform: translateX(-50%) translateY(-2px);
+    box-shadow: 0 14px 32px rgba(245, 182, 91, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+  .drive-exit:active { transform: translateX(-50%) translateY(0) scale(0.98); }
+  .drive-exit kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    border: 1px solid rgba(244, 234, 215, 0.22);
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.32);
+    color: rgba(244, 234, 215, 0.72);
+    font-family: 'Orbitron', sans-serif;
+    font-size: 8px;
+    letter-spacing: 0.16em;
+  }
 </style>
 </head>
-<body>
+<body class="is-phase-landing">
 
-<div class="overlay" id="overlay">
+<div class="arcade-scanlines" aria-hidden="true"></div>
+<div class="arcade-frame" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+
+<div class="landing" id="landing">
+  <div class="landing-spacer"></div>
+  <div class="landing-body">
+    <div class="landing-eyebrow">arcade · v1.3 · gesture drive</div>
+    <h1 class="landing-title" data-text="GESTURE DRIVE">GESTURE DRIVE</h1>
+    <div class="landing-slogan">hands on the wheel of light</div>
+    <div class="landing-start">
+      <div class="landing-press">▸ PRESS START ◂</div>
+      <div class="landing-keys">click · space · enter</div>
+    </div>
+  </div>
+  <div class="landing-footer">
+    <span>ⓘ camera access required</span>
+    <span class="landing-status" id="landing-status">standby</span>
+  </div>
+</div>
+
+<div class="overlay hidden" id="overlay">
   <div class="garage">
     <div class="garage-header">
       <h1>GESTURE DRIVE</h1>
-      <div class="garage-kicker">GESTURE GARAGE / SELECT YOUR DRIVE</div>
+      <div class="garage-kicker">SELECT YOUR MACHINE · <span id="garage-index">01 / 04</span></div>
     </div>
 
     <div class="garage-shell">
@@ -1132,28 +1464,35 @@
       <button class="garage-arrow" id="garage-next" type="button" aria-label="Next car">›</button>
     </div>
 
+    <div class="turntable-dots" id="turntable-dots" aria-hidden="true"></div>
+
     <div class="garage-meta">
       <div>
         <h2 id="garage-car-name">Crimson GT</h2>
         <p><span id="garage-car-tag">Balanced</span> / <span id="garage-car-file">car-01.glb</span></p>
       </div>
-      <div class="garage-ready" id="garage-ready">SWIPE TO SELECT</div>
+      <div class="garage-ready" id="garage-ready">WAVE TO SWITCH · FIST TO LAUNCH</div>
     </div>
 
     <div class="garage-actions">
-      <button class="start-drive" id="start-drive" type="button" onclick="start()">START DRIVE</button>
+      <div class="confirm-ring-wrap">
+        <div class="confirm-ring" id="confirm-ring" style="--progress: 0;"></div>
+        <button class="start-drive" id="start-drive" type="button" onclick="start()">INITIATE DRIVE</button>
+      </div>
       <div class="gesture-guide">
-        <span>左右挥手：切换车辆</span>
-        <span>双手张开：确认车辆</span>
-        <span>右手 👍：加速</span>
-        <span>左手 👍：减速</span>
-        <span>双手合十：急刹</span>
+        <span id="guide-wave">✋ 左右挥手 · 切换车辆</span>
+        <span id="guide-fist">✊ 握拳保持 2s · 选定</span>
+        <span>右手 👍 油门 · 左手 👍 刹车 · 双手合十 急刹</span>
       </div>
     </div>
   </div>
 </div>
 
 <canvas id="scene"></canvas>
+
+<button class="drive-exit" id="drive-exit" type="button" aria-label="Return to garage">
+  ← CHANGE CAR <kbd>ESC</kbd>
+</button>
 
 <div class="cam-wrap">
   <span class="cam-label">ASSIST CAM</span>
@@ -1221,6 +1560,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/environments/RoomEnvironment.js';
 
 // ============ 全局状态 ============
 const state = {
@@ -1246,6 +1586,8 @@ const THUMB_CONFIRM_FRAMES = 3;
 const TOGETHER_CONFIRM_FRAMES = 2;
 const CAR_MODELS = [
   { id: "car-01", name: "Crimson GT", file: "car-01.glb", tag: "Balanced" },
+  { id: "car-02", name: "Shadow Coupe", file: "car-02.glb", tag: "Stealth" },
+  { id: "car-03", name: "Onyx Sport", file: "car-03.glb", tag: "Heavy" },
   { id: "car-04", name: "Street Phantom", file: "car-04.glb", tag: "Agile" },
   { id: "car-05", name: "Velocity RS", file: "car-05.glb", tag: "Speed" },
   { id: "car-06", name: "Cyber Runner", file: "car-06.glb", tag: "Future" }
@@ -1276,7 +1618,25 @@ const ui = {
   garageCarFile: document.getElementById('garage-car-file'),
   garageReady: document.getElementById('garage-ready'),
   startDrive: document.getElementById('start-drive'),
+  landing: document.getElementById('landing'),
+  landingStatus: document.getElementById('landing-status'),
+  garageIndex: document.getElementById('garage-index'),
+  turntableDots: document.getElementById('turntable-dots'),
+  confirmRing: document.getElementById('confirm-ring'),
+  guideWave: document.getElementById('guide-wave'),
+  guideFist: document.getElementById('guide-fist'),
+  driveExit: document.getElementById('drive-exit'),
 };
+
+// ============ Phase manager (landing | garage | drive) ============
+const PHASE = { LANDING: 'landing', GARAGE: 'garage', DRIVE: 'drive' };
+let phase = PHASE.LANDING;
+function setPhase(next) {
+  if (phase === next) return;
+  phase = next;
+  document.body.classList.remove('is-phase-landing', 'is-phase-garage', 'is-phase-drive');
+  document.body.classList.add('is-phase-' + next);
+}
 
 const gestureMemory = {
   rightThumb: { frames: 0, holdUntil: 0, active: false },
@@ -1306,6 +1666,8 @@ const garageState = {
   lastSwipeX: null,
   lastSwipeTime: 0,
   swipeCooldownUntil: 0,
+  swipeLocked: false,
+  swipeNeutralStartTime: 0,
   lastHandSpread: null,
   confirmStartTime: 0,
   confirmCooldownUntil: 0,
@@ -1314,6 +1676,8 @@ const garageState = {
 const SWIPE_THRESHOLD = 0.16;
 const SWIPE_SAMPLE_MS = 180;
 const SWIPE_COOLDOWN_MS = 700;
+const SWIPE_UNLOCK_THRESHOLD = 0.035;
+const SWIPE_UNLOCK_HOLD_MS = 220;
 const CONFIRM_SPREAD_DELTA = 0.16;
 const CONFIRM_HOLD_DISTANCE = 0.56;
 const CONFIRM_HOLD_MS = 500;
@@ -1372,17 +1736,44 @@ function updateGarageUI() {
   ui.garageCarName.textContent = selectedCarModel.name;
   ui.garageCarTag.textContent = selectedCarModel.tag;
   ui.garageCarFile.textContent = selectedCarModel.file;
-  ui.garageReady.textContent = garageState.confirmed ? "READY TO DRIVE" : "SWIPE TO SELECT";
-  ui.startDrive.textContent = garageState.confirmed ? "INITIATE DRIVE" : "START DRIVE";
+  ui.garageReady.textContent = garageState.confirmed ? "READY TO DRIVE" : "WAVE TO SWITCH · FIST TO LAUNCH";
+  ui.startDrive.textContent = garageState.confirmed ? "INITIATE DRIVE" : "INITIATE DRIVE";
   ui.overlay.classList.toggle("is-car-confirmed", garageState.confirmed);
+  if (ui.garageIndex) {
+    ui.garageIndex.textContent = `${String(selectedCarIndex + 1).padStart(2, '0')} / ${String(CAR_MODELS.length).padStart(2, '0')}`;
+  }
+  updateTurntableDots();
   renderGarageCards();
 }
 
+function buildTurntableDots() {
+  if (!ui.turntableDots) return;
+  ui.turntableDots.innerHTML = '';
+  for (let i = 0; i < CAR_MODELS.length; i++) {
+    const dot = document.createElement('span');
+    dot.dataset.index = String(i);
+    ui.turntableDots.appendChild(dot);
+  }
+}
+
+function updateTurntableDots() {
+  if (!ui.turntableDots) return;
+  const dots = ui.turntableDots.querySelectorAll('span');
+  dots.forEach((d, i) => d.classList.toggle('is-active', i === selectedCarIndex));
+}
+
+buildTurntableDots();
+
 function selectGarageCar(delta) {
-  selectedCarIndex = getWrappedIndex(selectedCarIndex + delta);
-  selectedCarModel = CAR_MODELS[selectedCarIndex];
-  garageState.confirmed = false;
-  updateGarageUI();
+  const newIndex = getWrappedIndex(selectedCarIndex + delta);
+  if (typeof garagePreview !== 'undefined' && garagePreview.ready) {
+    switchGarageCar(newIndex);
+  } else {
+    selectedCarIndex = newIndex;
+    selectedCarModel = CAR_MODELS[selectedCarIndex];
+    garageState.confirmed = false;
+    updateGarageUI();
+  }
 }
 
 function confirmGarageSelection() {
@@ -1397,24 +1788,49 @@ function getGarageHandCenter() {
 }
 
 function updateGarageGestureState() {
-  if (hasStarted || ui.overlay.classList.contains("hidden")) return;
+  if (phase !== PHASE.GARAGE) return;
+  if (hasStarted) return;
   const now = performance.now();
   const center = getGarageHandCenter();
 
-  if (center && now >= garageState.swipeCooldownUntil) {
+  // 1) Wave left/right → switch car (uses the 3D switchGarageCar via selectGarageCar)
+  if (center && garageState.swipeLocked) {
+    if (garageState.lastSwipeX === null || now - garageState.lastSwipeTime > 520) {
+      garageState.lastSwipeX = center.x;
+      garageState.lastSwipeTime = now;
+      garageState.swipeNeutralStartTime = 0;
+    } else if (now - garageState.lastSwipeTime >= SWIPE_SAMPLE_MS) {
+      const deltaX = center.x - garageState.lastSwipeX;
+      if (Math.abs(deltaX) < SWIPE_UNLOCK_THRESHOLD) {
+        if (!garageState.swipeNeutralStartTime) garageState.swipeNeutralStartTime = now;
+        if (now - garageState.swipeNeutralStartTime >= SWIPE_UNLOCK_HOLD_MS) {
+          garageState.swipeLocked = false;
+          garageState.swipeNeutralStartTime = 0;
+        }
+      } else {
+        garageState.swipeNeutralStartTime = 0;
+      }
+      garageState.lastSwipeX = center.x;
+      garageState.lastSwipeTime = now;
+    }
+  } else if (center && now >= garageState.swipeCooldownUntil) {
     if (garageState.lastSwipeX === null || now - garageState.lastSwipeTime > 520) {
       garageState.lastSwipeX = center.x;
       garageState.lastSwipeTime = now;
     } else if (now - garageState.lastSwipeTime >= SWIPE_SAMPLE_MS) {
       const deltaX = center.x - garageState.lastSwipeX;
       if (deltaX < -SWIPE_THRESHOLD) {
-        selectGarageCar(1);
+        selectGarageCar(-1);
         garageState.swipeCooldownUntil = now + SWIPE_COOLDOWN_MS;
+        garageState.swipeLocked = true;
+        garageState.swipeNeutralStartTime = 0;
         garageState.lastSwipeX = center.x;
         garageState.lastSwipeTime = now;
       } else if (deltaX > SWIPE_THRESHOLD) {
-        selectGarageCar(-1);
+        selectGarageCar(1);
         garageState.swipeCooldownUntil = now + SWIPE_COOLDOWN_MS;
+        garageState.swipeLocked = true;
+        garageState.swipeNeutralStartTime = 0;
         garageState.lastSwipeX = center.x;
         garageState.lastSwipeTime = now;
       } else {
@@ -1424,27 +1840,36 @@ function updateGarageGestureState() {
     }
   } else if (!center) {
     garageState.lastSwipeX = null;
+    garageState.swipeLocked = false;
+    garageState.swipeNeutralStartTime = 0;
   }
 
-  if (state.leftHand && state.rightHand && now >= garageState.confirmCooldownUntil) {
-    const leftPalm = state.leftHand[9];
-    const rightPalm = state.rightHand[9];
-    const handSpread = Math.hypot(leftPalm.x - rightPalm.x, leftPalm.y - rightPalm.y);
-    const spreadDelta = garageState.lastHandSpread === null ? 0 : handSpread - garageState.lastHandSpread;
-    if (spreadDelta > CONFIRM_SPREAD_DELTA || handSpread > CONFIRM_HOLD_DISTANCE) {
-      if (!garageState.confirmStartTime) garageState.confirmStartTime = now;
-      if (spreadDelta > CONFIRM_SPREAD_DELTA || now - garageState.confirmStartTime >= CONFIRM_HOLD_MS) {
-        confirmGarageSelection();
-        garageState.confirmCooldownUntil = now + CONFIRM_COOLDOWN_MS;
-        garageState.confirmStartTime = 0;
-      }
-    } else {
-      garageState.confirmStartTime = 0;
+  // 2) Fist hold 2s → confirm + auto-start drive
+  let fistDetected = false;
+  if (state.rightHand && isFist(state.rightHand)) fistDetected = true;
+  if (state.leftHand && isFist(state.leftHand)) fistDetected = true;
+
+  if (fistDetected && now >= garagePreview.fistCooldownUntil && !garagePreview.switchAnim) {
+    if (!garagePreview.fistHoldStart) {
+      garagePreview.fistHoldStart = now;
+      if (ui.confirmRing) ui.confirmRing.classList.add('is-active');
     }
-    garageState.lastHandSpread = handSpread;
-  } else if (!state.leftHand || !state.rightHand) {
-    garageState.lastHandSpread = null;
-    garageState.confirmStartTime = 0;
+    const progress = Math.min(1, (now - garagePreview.fistHoldStart) / FIST_HOLD_MS);
+    if (ui.confirmRing) ui.confirmRing.style.setProperty('--progress', progress.toFixed(3));
+    if (ui.guideFist) ui.guideFist.classList.add('is-hot');
+    if (progress >= 1 && !garagePreview.fistConfirmed) {
+      garagePreview.fistConfirmed = true;
+      garagePreview.fistCooldownUntil = now + 2000;
+      confirmGarageSelection();
+      window.start();
+    }
+  } else {
+    if (garagePreview.fistHoldStart) resetFistProgress();
+    if (ui.guideFist) ui.guideFist.classList.remove('is-hot');
+  }
+
+  if (ui.guideWave) {
+    ui.guideWave.classList.toggle('is-hot', now < garageState.swipeCooldownUntil);
   }
 }
 
@@ -1999,8 +2424,255 @@ scene.add(car);
 window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
+  garageCamera.aspect = window.innerWidth / window.innerHeight;
+  garageCamera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
+
+// ============ Garage 3D scene (shares the same renderer) ============
+const garageScene = new THREE.Scene();
+garageScene.background = null;
+garageScene.fog = null;
+
+const garageCamera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 60);
+garageCamera.position.set(0, 1.4, 5.2);
+garageCamera.lookAt(0, 0.55, 0);
+
+garageScene.add(new THREE.AmbientLight(0x9ab4d2, 0.55));
+garageScene.add(new THREE.HemisphereLight(0xddeeff, 0x101820, 1.05));
+
+const garageKey = new THREE.DirectionalLight(0xffffff, 3.2);
+garageKey.position.set(4.5, 7, 5);
+garageScene.add(garageKey);
+
+const garageFrontFill = new THREE.DirectionalLight(0xe8f6ff, 1.6);
+garageFrontFill.position.set(0, 2.8, 6);
+garageScene.add(garageFrontFill);
+
+const garageRimL = new THREE.PointLight(0x66e8ff, 3.4, 14, 2);
+garageRimL.position.set(-3.6, 1.6, 1.8);
+garageScene.add(garageRimL);
+
+const garageRimR = new THREE.PointLight(0xf5b65b, 3.0, 14, 2);
+garageRimR.position.set(3.6, 1.6, 1.8);
+garageScene.add(garageRimR);
+
+const garageTopFill = new THREE.PointLight(0xdaf4ff, 1.8, 12, 2);
+garageTopFill.position.set(0, 4.6, 2.0);
+garageScene.add(garageTopFill);
+
+// Soft environment for nicer metallic reflections
+const garagePmrem = new THREE.PMREMGenerator(renderer);
+garageScene.environment = garagePmrem.fromScene(new RoomEnvironment(renderer), 0.04).texture;
+
+// Turntable: dark floor disc + cyan ring + thin amber ring
+const turntableGroup = new THREE.Group();
+const floorDisc = new THREE.Mesh(
+  new THREE.CircleGeometry(1.95, 96),
+  new THREE.MeshStandardMaterial({
+    color: 0x0a141d,
+    metalness: 0.78,
+    roughness: 0.32,
+    emissive: 0x06121c,
+    emissiveIntensity: 0.4,
+    transparent: true,
+    opacity: 0.88,
+  })
+);
+floorDisc.rotation.x = -Math.PI / 2;
+floorDisc.position.y = -0.001;
+turntableGroup.add(floorDisc);
+
+const ringOuter = new THREE.Mesh(
+  new THREE.TorusGeometry(1.92, 0.022, 16, 128),
+  new THREE.MeshBasicMaterial({ color: 0x66e8ff, transparent: true, opacity: 0.82 })
+);
+ringOuter.rotation.x = Math.PI / 2;
+ringOuter.position.y = 0.005;
+turntableGroup.add(ringOuter);
+
+const ringInner = new THREE.Mesh(
+  new THREE.TorusGeometry(1.66, 0.008, 12, 96),
+  new THREE.MeshBasicMaterial({ color: 0xf5b65b, transparent: true, opacity: 0.55 })
+);
+ringInner.rotation.x = Math.PI / 2;
+ringInner.position.y = 0.004;
+turntableGroup.add(ringInner);
+
+// 4 cardinal direction tick marks on the outer ring
+for (let i = 0; i < 4; i++) {
+  const tick = new THREE.Mesh(
+    new THREE.BoxGeometry(0.04, 0.005, 0.18),
+    new THREE.MeshBasicMaterial({ color: 0xc8f4ff, transparent: true, opacity: 0.78 })
+  );
+  const a = (i / 4) * Math.PI * 2;
+  tick.position.set(Math.sin(a) * 1.92, 0.008, Math.cos(a) * 1.92);
+  tick.rotation.y = a;
+  turntableGroup.add(tick);
+}
+
+garageScene.add(turntableGroup);
+
+// Cradle rotates around Y for wrist tilt + idle spin
+const garageCarCradle = new THREE.Group();
+garageScene.add(garageCarCradle);
+
+// Per-car holders sit inside the cradle. Each holder gets its own slide-X offset for animations.
+const garageCarHolders = CAR_MODELS.map(() => {
+  const g = new THREE.Group();
+  g.visible = false;
+  garageCarCradle.add(g);
+  return g;
+});
+
+// Garage state (preview-only)
+const garagePreview = {
+  ready: false,
+  switchAnim: null,         // { fromIndex, toIndex, dir, t0, duration }
+  fistHoldStart: 0,
+  fistConfirmed: false,
+  fistCooldownUntil: 0,
+  switchCooldownUntil: 0,
+};
+const GARAGE_SWITCH_MS = 420;
+const FIST_HOLD_MS = 2000;
+const IDLE_SPIN_RATE = 0.22;      // rad/s, paused during switch / fist hold
+const SWITCH_COOLDOWN_MS = 600;
+
+// Returns a wrapper Group with the model centered (bbox center on X/Z = 0, bottom at Y = 0),
+// scaled to a uniform display size, and rotated to face front-on to the camera.
+function fitGaragePreviewModel(model, modelFile) {
+  // 1) measure the model in its natural pose
+  model.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(model);
+  const size = new THREE.Vector3();
+  const center = new THREE.Vector3();
+  box.getSize(size);
+  box.getCenter(center);
+
+  // 2) shift the model inside its local frame so bbox center is at (0, halfHeight, 0)
+  //    and bottom sits on Y=0 — done by moving its position by the negated center/min.
+  model.position.set(-center.x, -box.min.y, -center.z);
+
+  // 3) wrap so scale + rotation apply around (0,0,0) without re-introducing offset
+  const wrapper = new THREE.Group();
+  wrapper.add(model);
+  const longest = Math.max(size.x, size.z);
+  const targetLongest = 2.6;
+  const scale = longest > 0 ? targetLongest / longest : 1;
+  wrapper.scale.setScalar(scale);
+  const t = MODEL_TRANSFORMS[modelFile] || {};
+  wrapper.rotation.y = (t.rotationY ?? Math.PI) + Math.PI;
+
+  // 4) lift slightly off turntable to avoid z-fighting with the floor disc
+  wrapper.position.y = 0.008;
+
+  // 5) tune materials for the env map
+  model.traverse((child) => {
+    if (!child.isMesh) return;
+    if (!child.material) return;
+    const mats = Array.isArray(child.material) ? child.material : [child.material];
+    mats.forEach((m) => {
+      m.envMapIntensity = Math.max(m.envMapIntensity || 0, 1.35);
+      m.needsUpdate = true;
+    });
+  });
+  return wrapper;
+}
+
+function preloadGarageCars() {
+  return Promise.all(CAR_MODELS.map((m, i) => new Promise((resolve) => {
+    if (garageCarHolders[i].children.length > 0) { resolve(true); return; }
+    gltfLoader.load(
+      `assets/models/${m.file}`,
+      (gltf) => {
+        const model = gltf.scene;
+        model.name = `garage-${m.file}`;
+        const wrapper = fitGaragePreviewModel(model, m.file);
+        garageCarHolders[i].add(wrapper);
+        garageCarHolders[i].visible = (i === selectedCarIndex);
+        resolve(true);
+      },
+      undefined,
+      (err) => {
+        console.error(`Garage preload failed for ${m.file}`, err);
+        resolve(false);
+      }
+    );
+  })));
+}
+
+// Switch car with slide animation
+function switchGarageCar(newIndex) {
+  newIndex = getWrappedIndex(newIndex);
+  if (newIndex === selectedCarIndex) return;
+  const now = performance.now();
+  if (now < garagePreview.switchCooldownUntil) return;
+  const dir = ((newIndex - selectedCarIndex + CAR_MODELS.length) % CAR_MODELS.length) === 1 ? 1 : -1;
+  garagePreview.switchAnim = { fromIndex: selectedCarIndex, toIndex: newIndex, dir, t0: now, duration: GARAGE_SWITCH_MS };
+  garagePreview.switchCooldownUntil = now + SWITCH_COOLDOWN_MS;
+  selectedCarIndex = newIndex;
+  selectedCarModel = CAR_MODELS[selectedCarIndex];
+  garageState.confirmed = false;
+  resetFistProgress();
+  // Snap cradle rotation to 0 so the slide reads as left↔right in the world
+  garageCarCradle.rotation.y = 0;
+  garageCarHolders.forEach((g, i) => { g.visible = (i === garagePreview.switchAnim.fromIndex) || (i === garagePreview.switchAnim.toIndex); });
+  updateGarageUI();
+}
+
+function stepGarageSwitchAnim(now) {
+  const anim = garagePreview.switchAnim;
+  if (!anim) {
+    garageCarHolders.forEach((g, i) => {
+      g.position.x = 0;
+      g.visible = (i === selectedCarIndex);
+    });
+    return;
+  }
+  const t = Math.min(1, (now - anim.t0) / anim.duration);
+  const ease = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+  const slide = 3.4 * ease;
+  const fromHolder = garageCarHolders[anim.fromIndex];
+  const toHolder = garageCarHolders[anim.toIndex];
+  fromHolder.visible = t < 1;
+  toHolder.visible = true;
+  fromHolder.position.x = -anim.dir * slide;
+  toHolder.position.x = anim.dir * (3.4 - slide);
+  if (t >= 1) {
+    fromHolder.position.x = 0;
+    toHolder.position.x = 0;
+    fromHolder.visible = false;
+    garagePreview.switchAnim = null;
+  }
+}
+
+function resetFistProgress() {
+  garagePreview.fistHoldStart = 0;
+  if (ui.confirmRing) {
+    ui.confirmRing.classList.remove('is-active');
+    ui.confirmRing.style.setProperty('--progress', '0');
+  }
+}
+
+// Gesture helpers used by the garage
+function isFist(landmarks) {
+  const wrist = landmarks[0];
+  const palm = landmarks[9];
+  const handSize = Math.hypot(wrist.x - palm.x, wrist.y - palm.y);
+  if (handSize < 0.01) return false;
+  const pairs = [[8, 5], [12, 9], [16, 13], [20, 17]];
+  for (const [tipIdx, mcpIdx] of pairs) {
+    const tip = landmarks[tipIdx];
+    const mcp = landmarks[mcpIdx];
+    const d = Math.hypot(tip.x - mcp.x, tip.y - mcp.y);
+    if (d > handSize * 0.62) return false;
+  }
+  const thumbTip = landmarks[4];
+  const thumbToPalm = Math.hypot(thumbTip.x - palm.x, thumbTip.y - palm.y);
+  if (thumbToPalm > handSize * 1.4) return false;
+  return true;
+}
 
 // ============ MediaPipe ============
 const video = document.getElementById('video');
@@ -2172,12 +2844,40 @@ function updateStatusUI() {
 let lastFrame = performance.now();
 let frameCount = 0, fpsTime = performance.now();
 
+function stepGaragePreview(now, dt) {
+  stepGarageSwitchAnim(now);
+  // Idle slow spin so the car shows off its sides — pause during a switch or while
+  // the user is holding a fist (steady frame for the confirm progress).
+  if (!garagePreview.switchAnim && !garagePreview.fistHoldStart) {
+    garageCarCradle.rotation.y += IDLE_SPIN_RATE * dt;
+  }
+  // Slow inner-ring sweep for liveness
+  ringInner.rotation.z += dt * 0.4;
+}
+
 function animate() {
   requestAnimationFrame(animate);
   const now = performance.now();
   const dt = Math.min((now - lastFrame) / 1000, 0.1);
   lastFrame = now;
 
+  if (phase === PHASE.GARAGE) {
+    stepGaragePreview(now, dt);
+    renderer.render(garageScene, garageCamera);
+    frameCount++;
+    if (now - fpsTime > 1000) {
+      ui.fps.textContent = `${frameCount} fps`;
+      frameCount = 0; fpsTime = now;
+    }
+    return;
+  }
+
+  if (phase !== PHASE.DRIVE) {
+    // Landing or other: nothing to render via Three.js (canvas stays transparent)
+    return;
+  }
+
+  // ===== Drive phase =====
   // 计算速度：无手势时保速滑行；刹车优先于油门
   //   油门：~12 km/h·s  → 0→140 约 12 秒
   //   缓减速(brake=0.25)：~14 km/h·s
@@ -2265,18 +2965,68 @@ function animate() {
   }
 }
 
-// ============ 启动 ============
+// ============ 启动流程：Landing → Garage → Drive ============
+
+function setLandingStatus(text, kind) {
+  if (!ui.landingStatus) return;
+  ui.landingStatus.textContent = text;
+  ui.landingStatus.classList.remove('is-loading', 'is-error');
+  if (kind) ui.landingStatus.classList.add('is-' + kind);
+}
+
+async function ensureCameraStarted() {
+  if (activeCamera) return true;
+  activeCamera = new Camera(video, {
+    onFrame: async () => { await hands.send({ image: video }); },
+    width: 640,
+    height: 480,
+  });
+  await activeCamera.start();
+  return true;
+}
+
+let entering = false;
+async function enterGarage() {
+  if (entering || phase !== PHASE.LANDING) return;
+  entering = true;
+  setLandingStatus('initializing camera…', 'loading');
+  try {
+    await ensureCameraStarted();
+  } catch (e) {
+    setLandingStatus('camera failed: ' + (e?.message || e), 'error');
+    entering = false;
+    return;
+  }
+  setLandingStatus('preloading machines…', 'loading');
+  try {
+    await preloadGarageCars();
+    garagePreview.ready = true;
+  } catch (e) {
+    console.error('Garage preload error', e);
+  }
+  setPhase(PHASE.GARAGE);
+  ui.landing.classList.add('is-hidden');
+  ui.overlay.classList.remove('hidden');
+  if (!animationStarted) {
+    animationStarted = true;
+    animate();
+  }
+  // Ensure the active car is visible at center
+  garageCarHolders.forEach((g, i) => { g.position.x = 0; g.visible = (i === selectedCarIndex); });
+  entering = false;
+}
+
 window.start = async function() {
   if (hasStarted) return;
+  if (phase === PHASE.LANDING) { await enterGarage(); return; }
   hasStarted = true;
-  ui.startDrive.textContent = 'LOADING...';
+  ui.startDrive.textContent = 'LOADING…';
   ui.startDrive.disabled = true;
   const carLoaded = await loadSelectedCarModel();
   if (!carLoaded) {
     hasStarted = false;
     ui.startDrive.disabled = false;
     updateGarageUI();
-    ui.overlay.classList.remove('hidden');
     alert(
       `车辆模型加载失败：${selectedCarModel.file}\n\n` +
       `${lastCarLoadError || "请打开浏览器控制台查看具体错误。"}\n\n` +
@@ -2285,26 +3035,71 @@ window.start = async function() {
     return;
   }
   try {
-    activeCamera = new Camera(video, {
-      onFrame: async () => { await hands.send({ image: video }); },
-      width: 640,
-      height: 480,
-    });
-    activeCamera.start();
-    ui.overlay.classList.add('hidden');
+    await ensureCameraStarted();
   } catch (e) {
     hasStarted = false;
     ui.startDrive.disabled = false;
     updateGarageUI();
-    ui.overlay.classList.remove('hidden');
     alert('摄像头启动失败：' + e.message);
     return;
   }
+  ui.overlay.classList.add('hidden');
+  setPhase(PHASE.DRIVE);
   if (!animationStarted) {
     animationStarted = true;
     animate();
   }
 };
+
+function returnToGarage() {
+  if (phase !== PHASE.DRIVE) return;
+  // Reset drive state
+  hasStarted = false;
+  state.speed = 0;
+  state.steer = 0;
+  state.steerTarget = 0;
+  state.carX = 0;
+  state.throttle = 0;
+  state.brake = 0;
+  state.gear = 0;
+  car.position.x = 0;
+  car.rotation.y = 0;
+  document.body.classList.remove('is-throttling', 'is-hard-steer', 'is-braking');
+  // Reset garage confirm state so user can pick again
+  garageState.confirmed = false;
+  garagePreview.fistConfirmed = false;
+  garagePreview.fistCooldownUntil = performance.now() + 800; // grace before fist can re-fire
+  resetFistProgress();
+  ui.startDrive.disabled = false;
+  setPhase(PHASE.GARAGE);
+  ui.overlay.classList.remove('hidden');
+  updateGarageUI();
+}
+
+if (ui.driveExit) ui.driveExit.addEventListener('click', returnToGarage);
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && phase === PHASE.DRIVE) {
+    e.preventDefault();
+    returnToGarage();
+  }
+});
+
+function bootLanding() {
+  if (!ui.landing) return;
+  setLandingStatus('press start to begin', null);
+  const trigger = (e) => {
+    if (phase !== PHASE.LANDING) return;
+    if (e && e.type === 'keydown') {
+      if (e.key !== ' ' && e.key !== 'Enter' && e.key !== 'Spacebar') return;
+      e.preventDefault();
+    }
+    enterGarage();
+  };
+  ui.landing.addEventListener('click', trigger);
+  window.addEventListener('keydown', trigger);
+}
+
+bootLanding();
 </script>
 </body>
 </html>

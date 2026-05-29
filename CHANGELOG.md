@@ -4,7 +4,7 @@
 
 - 新增 Gesture Garage 车库选择界面
 - 新增左右挥手切换车辆
-- 新增双手张开确认车辆，进入 READY TO DRIVE 状态
+- 新增握拳保持 2 秒确认车辆，进入 READY TO DRIVE 状态并自动启动驾驶
 - 保留鼠标 / 触控备用操作：左右箭头、车辆卡片、START DRIVE 按钮
 - 接入 Three.js GLTFLoader，通过 `assets/models/${selectedCarModel.file}` 加载当前选中车辆
 - 启动驾驶前会清空旧车辆对象，避免多个模型叠加或残留旧车
